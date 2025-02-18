@@ -1,0 +1,7 @@
+GOOGLE_ID = ""
+GOOGLE_SECRET = ""
+
+NEXTAUTH_URL=frontend_url
+SECRET=
+
+NEXT_PUBLIC_FASTAPI=http://localhost:8000/api
