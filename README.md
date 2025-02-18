@@ -21,6 +21,8 @@ git clone https://github.com/yourusername/store-frontend.git
 cd store-frontend
 npm install --legacy-peer-deps
 ```
+### [IMPORTANT!] .env file setup
+Use the `.env copy` file in your project. You need to rename it to `.env` and ensure that the environment variables are correctly set. 
 
 ## Usage
 
@@ -32,6 +34,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
+### Production Build
 To build the project for production, use:
 
 ```bash
@@ -82,23 +85,18 @@ store-frontend/
 
 The `Nav` component is responsible for rendering the navigation bar. It includes links to various pages such as orders and settings.
 
-### Header.js
-
-The `Header` component renders the header section of the application.
-
-### Footer.js
-
-The `Footer` component renders the footer section of the application.
-
 ## Pages
 
 ### index.js
 
 The main landing page of the application.
 
-### products/
+### products.js
 
 - `index.js`: Displays a list of products.
+
+### products/
+
 - `new.js`: Form to add a new product.
 - `edit/[id].js`: Form to edit an existing product.
 
@@ -113,11 +111,3 @@ Displays a list of orders.
 ### settings.js
 
 Displays the settings page.
-
-## Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request for any changes.
-
-## License
-
-This project is licensed under the MIT License.
