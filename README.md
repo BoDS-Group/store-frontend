@@ -24,6 +24,11 @@ npm install --legacy-peer-deps
 ### [IMPORTANT!] .env file setup
 Use the `.env copy` file in your project. You need to rename it to `.env` and ensure that the environment variables are correctly set. 
 
+### [IMPORTANT!] obtaining GOOGLE_ID and GOOGLE_SECRET
+1. Go to the [Google API Console](https://console.cloud.google.com/apis/credentials) and create a new project.
+2. Enable the Google API for OAuth 2.0, create a new client and set the client ID and client secret in the `.env` file.
+3. Put ``http://localhost:3000/api/auth/google/callback`` or ``PRODUCTION_DOMAIN/api/auth/google/callback`` as the callback URL in the Authorized redirect URIs section of the client.
+
 ## Usage
 
 To run the development server, use the following command:
