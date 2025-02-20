@@ -21,6 +21,8 @@ export default function ProductForm({
   const [productProperties, setProductProperties] = useState(assignedProperties || {});
   const [price, setPrice] = useState(existingPrice || '');
   const [images, setImages] = useState(existingImages || []);
+  const [imageIds, setImageIds] = useState([]);
+  const [imageURLs, setImageURLs] = useState([]);
   const [goToProducts, setGoToProducts] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -39,11 +41,16 @@ export default function ProductForm({
         setImages(productData.images);
         setCategory(productData.category);
         setProductProperties(productData.properties);
-
+        setImageIds(productData.imageIds || []);
       }
     }
     fetchData();
+    fillImageURLs();
   }, [id]);
+
+  useEffect(() => {
+    fillImageURLs();
+  }, [images]);
 
   useEffect(() => {
     if (categories.length > 0 && category) {
@@ -65,11 +72,22 @@ export default function ProductForm({
     }
   }, [category, categories]);
 
+  async function fillImageURLs() {
+    const imageUrlList = await Promise.all(images.map(async (imageId) => {
+      const response = await axiosInstance.get(`/image/${imageId}`);
+      // console.log('Image URL:', response.data.image_url);
+      return response.data.image_url;
+    }));
+    setImageURLs(imageUrlList);
+    console.log('Image URLs:', imageURLs);
+  }
+
   async function saveProduct(ev) {
     ev.preventDefault();
     const data = {
       title, description, price, images, category,
-      properties: productProperties
+      properties: productProperties,
+      imageIds
     };
     try {
       if (id) {
@@ -97,11 +115,32 @@ export default function ProductForm({
       for (const file of files) {
         data.append('file', file);
       }
-      const res = await axios.post('/api/upload', data);
-      setImages(oldImages => {
-        return [...oldImages, ...res.data.links];
-      });
-      setIsUploading(false);
+      // Add product ID to the FormData
+      data.append('product_id', id);
+      try {
+        const res = await axiosInstance.post('/image/upload', data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        console.log(res.data);
+
+        const newImageId = res.data.image_id;
+        setImages(oldImageIds => [...oldImageIds, newImageId]);
+        console.log('Images:', images);
+
+        // Fetch image URLs
+        // const imageUrls = await Promise.all(newImageId.map(async (imageId) => {
+        //   const response = await axiosInstance.get(`/image/${imageId}`);
+        //   return response.data.image_url;
+        // }));
+
+        // setImages(oldImages => [...oldImages, ...imageUrls]);
+      } catch (error) {
+        console.error('Error uploading images:', error);
+      } finally {
+        setIsUploading(false);
+      }
     }
   }
 
@@ -135,13 +174,10 @@ export default function ProductForm({
           <option key={c.id} value={c.id}>{c.name}</option>
         ))}
       </select>
-      {/* {console.log(propertiesToFill)}
-      {console.log(categories)} */}
       {propertiesToFill && (propertiesToFill.length > 0 && propertiesToFill.map(([propName, propValues]) => (
         <div key={propName} className="">
           <label>{propName[0].toUpperCase() + propName.substring(1)}</label>
           <div>
-            {console.log("PROP VALUES",propValues)}
             {propValues.length > 0 ? (
               <select value={productProperties[propName]}
                 onChange={ev =>
@@ -169,10 +205,10 @@ export default function ProductForm({
       </label>
       <div className="mb-2 flex flex-wrap gap-1">
         <ReactSortable
-          list={images}
+          list={imageURLs}
           className="flex flex-wrap gap-1"
           setList={updateImagesOrder}>
-          {!!images?.length && images.map(link => (
+          {!!imageURLs?.length && imageURLs.map(link => (
             <div key={link} className="h-24 bg-white p-4 shadow-sm rounded-sm border border-gray-200">
               <img src={link} alt="" className="rounded-lg" />
             </div>
