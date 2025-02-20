@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
     const { data } = await oauth2.userinfo.get();
 
-    const response = await axios.post(process.env.FASTAPI + "/auth/google", data);
+    const response = await axios.post(process.env.FASTAPI + "/auth/store/google", data);
     const { access_token } = response.data;
 
     res.redirect(`http://localhost:3000?token=${access_token}`);
