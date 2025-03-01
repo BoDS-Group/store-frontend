@@ -5,6 +5,7 @@ import Logo from "@/components/Logo";
 import AxiosInstance from "@/components/AxiosInstance";
 import { useRouter } from "next/router";
 import { useUser } from "@/components/UserContext";
+import LoginForm from "@/components/LoginForm";
 
 export default function Layout({ children }) {
   const [showNav, setShowNav] = useState(false);
@@ -36,7 +37,7 @@ export default function Layout({ children }) {
 
   const fetchUser = async () => {
     try {
-      const response = await AxiosInstance.get('/users/me');
+      const response = await AxiosInstance.get('auth/store/users/me');
       setUser(response.data);
       // console.log(response.data);
     } catch (error) {
@@ -57,6 +58,7 @@ export default function Layout({ children }) {
       <div className="bg-bgGray w-screen h-screen flex items-center">
         <div className="text-center w-full">
           <p className="text-red-500">Unauthorized access. Please try again.</p>
+          <LoginForm onLoginSuccess={setToken} />
           <button onClick={handleGoogleLogin} className="bg-white p-2 px-4 rounded-lg">
             Login with Google
           </button>
@@ -69,6 +71,7 @@ export default function Layout({ children }) {
     return (
       <div className="bg-bgGray w-screen h-screen flex items-center">
         <div className="text-center w-full">
+          <LoginForm onLoginSuccess={setToken} />
           <button onClick={handleGoogleLogin} className="bg-white p-2 px-4 rounded-lg">
             Login with Google
           </button>
