@@ -27,6 +27,7 @@ export default function ProductForm({
   const [isUploading, setIsUploading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [propertiesToFill, setPropertiesToFill] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -85,17 +86,18 @@ export default function ProductForm({
   async function saveProduct(ev) {
     ev.preventDefault();
     const data = {
-      title, description, price, images, category,
-      properties: productProperties,
-      imageIds
+      title, description, price, images: images.map(String), category,
+      properties: productProperties
     };
     try {
       if (id) {
         // update
+        console.log('Updating product:', data);
         await axiosInstance.put(`/products/${id}`, data);
       } else {
         // create
-        await axiosInstance.post('/products', data);
+        const response = await axiosInstance.post('/products', data);
+        await uploadNewImage(response.data.product_id);
       }
       setGoToProducts(true);
     } catch (error) {
@@ -105,6 +107,44 @@ export default function ProductForm({
 
   if (goToProducts) {
     router.push('/products');
+  }
+
+  async function handleImage(ev) {
+    if (id) {
+      await uploadImages(ev);
+    } else {
+      const files = ev.target.files;
+      if (files.length > 0) {
+        setSelectedFiles(prevFiles => [...prevFiles, ...Array.from(files)]);
+        const fileURLs = Array.from(files).map(file => URL.createObjectURL(file));
+        console.log('File URLs:', fileURLs);
+        setImageURLs(prevURLs => [...prevURLs, ...fileURLs]);
+      }
+    }
+  }
+
+  async function uploadNewImage(product_id) {
+    if (selectedFiles.length > 0) {
+      for (const file of selectedFiles) {
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('product_id', product_id);
+        try {
+          const res = await axiosInstance.post('/image/upload', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          const newImageId = res.data.image_id;
+          setImages(oldImageIds => [...oldImageIds, newImageId]);
+        } catch (error) {
+          console.error('Error uploading images:', error);
+        } finally {
+          setIsUploading(false);
+        }
+      }
+    }
   }
 
   async function uploadImages(ev) {
@@ -226,7 +266,7 @@ export default function ProductForm({
           <div>
             Add image
           </div>
-          <input type="file" onChange={uploadImages} className="hidden" />
+          <input type="file" onChange={handleImage} className="hidden" />
         </label>
       </div>
       <label>Description</label>
