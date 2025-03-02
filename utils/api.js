@@ -1,5 +1,27 @@
 import axiosInstance from "@/components/AxiosInstance";
 
+// Fetch store data from stores table by store_id
+export async function fetchStoreData() {
+  try {
+    const response = await axiosInstance.get('/store');
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching store data:', error);
+  }
+}
+
+// Fetch image url by image_id
+export async function fetchImageURL(image_id) {
+  try {
+      const response = await axiosInstance.get(`/image/${image_id}`);
+      // console.log(response.data);
+      return response.data;
+  } catch (error) {
+      console.error('Error fetching image:', error);
+  }
+}
+
 // Fetch all products
 export async function fetchProducts() {
   try {

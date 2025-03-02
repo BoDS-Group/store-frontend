@@ -7,7 +7,7 @@ import { useRouter } from "next/router";
 import { useUser } from "@/components/UserContext";
 import LoginForm from "@/components/LoginForm";
 
-export default function Layout({ children }) {
+export default function Layout({ children, resetStoreData }) {
   const [showNav, setShowNav] = useState(false);
   const [token, setToken] = useState(null);
   const [error, setError] = useState(null);
@@ -110,6 +110,7 @@ export default function Layout({ children }) {
               localStorage.removeItem("token");
               setToken(null);
               setUser(null);
+              resetStoreData();
             }} className="bg-white p-2 px-4 rounded-lg">
               Logout
             </button>
