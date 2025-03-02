@@ -3,7 +3,7 @@ import axiosInstance from "@/components/AxiosInstance";
 // Fetch all products
 export async function fetchProducts() {
   try {
-    const response = await axiosInstance.get('/products');
+    const response = await axiosInstance.get('/store/products');
     // console.log(response.data);
     return response.data;
   } catch (error) {
@@ -14,7 +14,7 @@ export async function fetchProducts() {
 // Fetch a single product
 export async function fetchProductById(id) {
     try {
-      const response = await axiosInstance.get(`/products/${id}`);
+      const response = await axiosInstance.get(`/store/products/${id}`);
     //   console.log(response.data);
       return response.data;
     } catch (error) {
@@ -25,7 +25,7 @@ export async function fetchProductById(id) {
 // Fetch all categories
 export async function fetchCategories() {
   try {
-    const response = await axiosInstance.get('/categories');
+    const response = await axiosInstance.get('/store/categories');
     // console.log(response.data);
     return response.data;
   } catch (error) {
@@ -36,7 +36,7 @@ export async function fetchCategories() {
 // Delete a product by id
 export async function deleteProductById(id) {
   try {
-    const response = await axiosInstance.delete(`/products/${id}`);
+    const response = await axiosInstance.delete(`/store/products/${id}`);
     // console.log(response.data);
     return response.data;
   } catch (error) {
@@ -47,7 +47,7 @@ export async function deleteProductById(id) {
 // Update a category by id
 export async function updateCategoryById(id, data) {
   try {
-    const response = await axiosInstance.put(`/categories/${id}`, data);
+    const response = await axiosInstance.put(`/store/categories/${id}`, data);
     // console.log(response.data);
     return response.data;
   } catch (error) {
@@ -58,7 +58,7 @@ export async function updateCategoryById(id, data) {
 // Delete a category by id
 export async function deleteCategoryById(id) {
   try {
-    const response = await axiosInstance.delete(`/categories/${id}`);
+    const response = await axiosInstance.delete(`/store/categories/${id}`);
     // console.log(response.data);
     return response.data;
   } catch (error) {
@@ -69,7 +69,7 @@ export async function deleteCategoryById(id) {
 // Insert a category
 export async function insertCategory(data) {
   try {
-    const response = await axiosInstance.post('/categories', data);
+    const response = await axiosInstance.post('/store/categories', data);
     // console.log(response.data);
     return response.data;
   } catch (error) {
