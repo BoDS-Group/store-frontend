@@ -26,7 +26,7 @@ function AddEmployeeForm({ swal }) {
         text: 'New employee has been added!',
         icon: 'success',
       });
-    //   router.push('/employees'); 
+      router.push('/employees'); 
     } catch (error) {
       console.error('Error saving new employee:', error);
       swal.fire({

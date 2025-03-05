@@ -17,17 +17,16 @@ export default function Home() {
     async function fetchData() {
       const storeData = await fetchStoreData();
       setStore(storeData);
-      console.log(storeData.image);
-      if (storeData.image) {
+      if (storeData && storeData.image) {
         const image = await fetchImageURL(storeData.image);
         setStoreImage(image.image_url);
         console.log(image.image_url);
       }
     }
 
-    function resetStoreData() {
-      setStore(null);
-      setStoreImage(null);
+    function resetStoreData() { 
+      setStore(null); 
+      setStoreImage(null);  
     }
 
   return <Layout resetStoreData={resetStoreData}>

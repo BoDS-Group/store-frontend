@@ -106,12 +106,13 @@ export default function Layout({ children, resetStoreData }) {
           <div className="flex w-fit absolute md:top-4 right-4 bg-highlight gap-1 text-primary font-medium rounded-lg overflow-hidden">
             {user?.picture && <img src={user?.picture} alt="" className="w-10 h-10" />}
             <span className="px-2 my-auto">{user?.name}</span>
-            <span className="px-2 my-auto">{user?.is_admin ? "Admin" : "User"}</span>
+            <span className="px-2 my-auto">{user?.is_admin ? "Admin" : "Employee"}</span>
             <button onClick={() => {
               localStorage.removeItem("token");
               setToken(null);
               setUser(null);
-              resetStoreData();
+              window.location.reload();
+              // resetStoreData();
             }} className="bg-white p-2 px-4 rounded-lg">
               Logout
             </button>
