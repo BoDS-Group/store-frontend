@@ -21,6 +21,7 @@ export default function LoginForm({ onLoginSuccess }) {
 
   return (
     <div className="bg-bgGray w-screen h-screen flex items-center">
+      <h1 className="text-3xl font-bold mb-4 w-1/2">Stores: Second Chance</h1>
       <div className="text-center w-full">
         <form onSubmit={handleLogin} className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl mb-4">Login</h2>

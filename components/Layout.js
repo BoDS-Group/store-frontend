@@ -76,9 +76,9 @@ export default function Layout({ children, resetStoreData }) {
       <div className="bg-bgGray w-screen h-screen flex items-center">
         <div className="text-center w-full">
           <LoginForm onLoginSuccess={setToken} />
-          <button onClick={handleGoogleLogin} className="bg-white p-2 px-4 rounded-lg">
+          {/* <button onClick={handleGoogleLogin} className="bg-white p-2 px-4 rounded-lg">
             Login with Google
-          </button>
+          </button> */}
         </div>
       </div>
     );
