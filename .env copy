@@ -1,3 +1,7 @@
+<!-- No need to fill out GOOGLE_ID and GOOGLE_SECRET -->
+GOOGLE_ID = ""
+GOOGLE_SECRET = ""
+
 NEXTAUTH_URL=http://localhost:3000
 SECRET=your-secret-key
 
