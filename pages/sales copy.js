@@ -87,7 +87,7 @@ export default function SalesPage() {
   const incrementQuantity = (barcodeValue) => {
     setScannedProducts(
       scannedProducts.map((item) =>
-        item.barcode === barcodeValue && item.quantity < item.stock
+        item.barcode === barcodeValue
           ? { ...item, quantity: item.quantity + 1 }
           : item
       )
@@ -151,7 +151,7 @@ export default function SalesPage() {
           <button
             onClick={handleFetchProduct}
             disabled={loading}
-            className="bg-gray-100 text-primary hover:bg-highlight px-4 py-2 rounded disabled:opacity-50"
+            className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
           >
             {loading ? 'Loading...' : 'Fetch Product'}
           </button>
@@ -167,7 +167,6 @@ export default function SalesPage() {
                 <th>Barcode</th>
                 <th>Title</th>
                 <th>Price</th>
-                <th>Stock</th>
                 <th>Qty</th>
                 <th style={{ textAlign: 'center' }}>Actions</th>
               </tr>
@@ -178,7 +177,6 @@ export default function SalesPage() {
                   <td>{item.barcode}</td>
                   <td>{item.title ?? '[No title]'}</td>
                   <td>{item.price ?? '[No price]'}</td>
-                  <td>{item.stock ?? '[No stock]'}</td>
                   <td>{item.quantity}</td>
                   <td style={{ textAlign: 'center' }}>
                     <button
@@ -203,7 +201,7 @@ export default function SalesPage() {
                 </tr>
               ))}
               <tr>
-                <td colSpan="3" style={{ textAlign: 'right', fontWeight: 'bold' }}>Total Price:</td>
+                <td colSpan="2" style={{ textAlign: 'right', fontWeight: 'bold' }}>Total Price:</td>
                 <td style={{ textAlign: 'center', fontWeight: 'bold' }}>
                   {scannedProducts.reduce((total, item) => total + (item.price ?? 0) * item.quantity, 0).toFixed(2)}
                 </td>
@@ -218,7 +216,7 @@ export default function SalesPage() {
           <button
             onClick={handleSubmitOrder}
             disabled={loading || !scannedProducts.length}
-            className="bg-highlight text-primary hover:bg-primary hover:text-white px-4 py-2 rounded disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-gray-500"
+            className="bg-primary text-white px-4 py-2 rounded disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-gray-500"
           >
             {loading ? 'Submitting...' : 'Submit Order'}
           </button>
