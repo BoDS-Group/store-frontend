@@ -98,3 +98,4 @@ export async function insertCategory(data) {
     console.error('Error inserting category:', error);
   }
 }
+
