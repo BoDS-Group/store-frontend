@@ -26,9 +26,12 @@ export default function ProductForm({
   const [isUploading, setIsUploading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [propertiesToFill, setPropertiesToFill] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState(
-    Array.isArray(assignedCategories) ? assignedCategories : []
-  );
+  const [selectedCategories, setSelectedCategories] = useState(() => {
+    if (Array.isArray(assignedCategories) && assignedCategories.length > 0) {
+      return assignedCategories;
+    }
+    return ['']; // Show one empty category slot if none assigned
+  });
   const [selectedFiles, setSelectedFiles] = useState([]);
   const router = useRouter();
 
