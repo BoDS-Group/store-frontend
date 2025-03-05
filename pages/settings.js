@@ -1,13 +1,16 @@
 import Layout from "@/components/Layout";
 import AddEmployeeForm from "@/components/AddEmployeeForm";
-
+import { useUser } from "@/components/UserContext";
 import { withSwal } from "react-sweetalert2";
 
 function Settings() {
+  const { user } = useUser();
   return (
     <Layout>
       <div>
         <h1>Settings</h1>
+        
+        {user?.is_admin && 
         <div
           style={{
             border: "1px solid #ccc",
@@ -18,6 +21,7 @@ function Settings() {
         >
           <AddEmployeeForm />
         </div>
+          }
       </div>
     </Layout>
   );
