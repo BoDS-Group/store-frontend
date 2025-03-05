@@ -8,16 +8,15 @@ import axiosInstance from "./AxiosInstance";
 
 export default function ProductForm({
   id,
+  assignedCategories = [],
   title: existingTitle,
   description: existingDescription,
   price: existingPrice,
   images: existingImages,
-  category: assignedCategory,
-  properties: assignedProperties,
+  properties: assignedProperties = {}, // Default to an empty object
 }) {
   const [title, setTitle] = useState(existingTitle || '');
   const [description, setDescription] = useState(existingDescription || '');
-  const [category, setCategory] = useState(assignedCategory || '');
   const [productProperties, setProductProperties] = useState(assignedProperties || {});
   const [price, setPrice] = useState(existingPrice || '');
   const [images, setImages] = useState(existingImages || []);
@@ -27,6 +26,9 @@ export default function ProductForm({
   const [isUploading, setIsUploading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [propertiesToFill, setPropertiesToFill] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState(
+    Array.isArray(assignedCategories) ? assignedCategories : []
+  );
   const [selectedFiles, setSelectedFiles] = useState([]);
   const router = useRouter();
 
@@ -34,15 +36,21 @@ export default function ProductForm({
     async function fetchData() {
       const categoriesData = await fetchCategories();
       setCategories(categoriesData);
+
       if (id) {
         const productData = await fetchProductById(id);
         setTitle(productData.title);
         setDescription(productData.description);
         setPrice(productData.price);
         setImages(productData.images);
-        setCategory(productData.category);
-        setProductProperties(productData.properties);
+        setProductProperties(productData.properties || {}); // Ensure it's an object
         setImageIds(productData.imageIds || []);
+
+        if (Array.isArray(productData.category)) {
+          setSelectedCategories(productData.category);
+        } else {
+          setSelectedCategories(productData.category ? [productData.category] : []);
+        }
       }
     }
     fetchData();
@@ -54,49 +62,68 @@ export default function ProductForm({
   }, [images]);
 
   useEffect(() => {
-    if (categories.length > 0 && category) {
-      let catInfo = categories.find(({ id }) => id === category);
-      const newPropertiesToFill = [];
-      if (catInfo) {
-        newPropertiesToFill.push(...Object.entries(catInfo.properties));
-        while (catInfo?.parent?.id) {
-          const parentCat = categories.find(({ id }) => id === catInfo?.parent?.id);
-          if (parentCat) {
-            newPropertiesToFill.push(...Object.entries(parentCat.properties));
-            catInfo = parentCat;
-          } else {
-            break;
+    if (categories.length === 0 || selectedCategories.length === 0) {
+      setPropertiesToFill([]);
+      return;
+    }
+
+    const collectedProperties = new Map();
+
+    selectedCategories.forEach(catId => {
+      let catInfo = categories.find(c => c.id === catId);
+      while (catInfo) {
+        if (catInfo.properties) {
+          for (const [propName, propValues] of Object.entries(catInfo.properties)) {
+            if (!collectedProperties.has(propName)) {
+              collectedProperties.set(propName, new Set());
+            }
+            propValues.forEach(v => collectedProperties.get(propName).add(v));
           }
         }
+        if (catInfo.parent?.id) {
+          catInfo = categories.find(c => c.id === catInfo.parent.id);
+        } else {
+          catInfo = null;
+        }
       }
-      setPropertiesToFill(newPropertiesToFill);
+    });
+
+    const mergedProperties = [];
+    for (const [name, valuesSet] of collectedProperties.entries()) {
+      mergedProperties.push([name, Array.from(valuesSet)]);
     }
-  }, [category, categories]);
+
+    setPropertiesToFill(mergedProperties);
+  }, [selectedCategories, categories]);
 
   async function fillImageURLs() {
+    if (!images || images.length === 0) {
+      setImageURLs([]);
+      return;
+    }
     const imageUrlList = await Promise.all(images.map(async (imageId) => {
       const response = await axiosInstance.get(`/image/${imageId}`);
-      // console.log('Image URL:', response.data.image_url);
       return response.data.image_url;
     }));
     setImageURLs(imageUrlList);
-    console.log('Image URLs:', imageURLs);
   }
 
   async function saveProduct(ev) {
     ev.preventDefault();
     const data = {
-      title, description, price, images: images.map(String), category,
-      properties: productProperties
+      title,
+      description,
+      price,
+      images: images.map(String),
+      category: selectedCategories,
+      properties: productProperties,
     };
+
     try {
       if (id) {
-        // update
-        console.log('Updating product:', data);
-        await axiosInstance.put(`/products/${id}`, data);
+        await axiosInstance.put(`store/products/${id}`, data);
       } else {
-        // create
-        const response = await axiosInstance.post('/products', data);
+        const response = await axiosInstance.post('store/products', data);
         await uploadNewImage(response.data.product_id);
       }
       setGoToProducts(true);
@@ -117,7 +144,6 @@ export default function ProductForm({
       if (files.length > 0) {
         setSelectedFiles(prevFiles => [...prevFiles, ...Array.from(files)]);
         const fileURLs = Array.from(files).map(file => URL.createObjectURL(file));
-        console.log('File URLs:', fileURLs);
         setImageURLs(prevURLs => [...prevURLs, ...fileURLs]);
       }
     }
@@ -155,7 +181,6 @@ export default function ProductForm({
       for (const file of files) {
         data.append('file', file);
       }
-      // Add product ID to the FormData
       data.append('product_id', id);
       try {
         const res = await axiosInstance.post('/image/upload', data, {
@@ -163,19 +188,8 @@ export default function ProductForm({
             'Content-Type': 'multipart/form-data',
           },
         });
-        console.log(res.data);
-
         const newImageId = res.data.image_id;
         setImages(oldImageIds => [...oldImageIds, newImageId]);
-        console.log('Images:', images);
-
-        // Fetch image URLs
-        // const imageUrls = await Promise.all(newImageId.map(async (imageId) => {
-        //   const response = await axiosInstance.get(`/image/${imageId}`);
-        //   return response.data.image_url;
-        // }));
-
-        // setImages(oldImages => [...oldImages, ...imageUrls]);
       } catch (error) {
         console.error('Error uploading images:', error);
       } finally {
@@ -184,15 +198,30 @@ export default function ProductForm({
     }
   }
 
-  function updateImagesOrder(images) {
-    setImages(images);
+  function updateImagesOrder(newOrder) {
+    setImages(newOrder);
   }
 
   function setProductProp(propName, value) {
-    setProductProperties(prev => {
-      const newProductProps = { ...prev };
-      newProductProps[propName] = value;
-      return newProductProps;
+    setProductProperties(prev => ({
+      ...prev,
+      [propName]: value
+    }));
+  }
+
+  function addCategory() {
+    setSelectedCategories(prev => [...prev, '']);
+  }
+
+  function removeCategory(index) {
+    setSelectedCategories(prev => prev.filter((_, i) => i !== index));
+  }
+
+  function handleCategoryChange(index, newValue) {
+    setSelectedCategories(prev => {
+      const updated = [...prev];
+      updated[index] = parseInt(newValue) || '';
+      return updated;
     });
   }
 
@@ -204,52 +233,66 @@ export default function ProductForm({
         placeholder="product name"
         value={title}
         onChange={ev => setTitle(ev.target.value)} />
-      <label>Category</label>
-      <select
-        value={category}
-        onChange={ev => setCategory(parseInt(ev.target.value))}
-      >
-        <option value="">Select category</option>
-        {categories.length > 0 && categories.map(c => (
-          <option key={c.id} value={c.id}>{c.name}</option>
-        ))}
-      </select>
-      {propertiesToFill && (propertiesToFill.length > 0 && propertiesToFill.map(([propName, propValues]) => (
-        <div key={propName} className="">
-          <label>{propName[0].toUpperCase() + propName.substring(1)}</label>
-          <div>
-            {propValues.length > 0 ? (
-              <select value={productProperties[propName]}
-                onChange={ev =>
-                  setProductProp(propName, ev.target.value)
-                }
-              >
-                {propValues.map(v => (
-                  <option key={v} value={v}>{v}</option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type="text"
-                value={productProperties[propName] || ''}
-                onChange={ev =>
-                  setProductProp(propName, ev.target.value)
-                }
-              />
-            )}
-          </div>
+
+      <label>Categories</label>
+      {selectedCategories.map((cat, index) => (
+        <div key={index} style={{ display: 'flex', gap: '8px' }}>
+          <select
+            value={cat}
+            onChange={ev => handleCategoryChange(index, ev.target.value)}
+          >
+            <option value="">Select category</option>
+            {categories.length > 0 && categories.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          {selectedCategories.length > 1 && (
+            <button type="button" onClick={() => removeCategory(index)}>
+              -
+            </button>
+          )}
+          {index === selectedCategories.length - 1 && (
+            <button type="button" onClick={addCategory}>+</button>
+          )}
         </div>
-      )))}
-      <label>
-        Photos
-      </label>
+      ))}
+
+      {propertiesToFill?.length > 0 && propertiesToFill.map(([propName, propValues]) => (
+        <div key={propName}>
+          <label>{propName[0].toUpperCase() + propName.substring(1)}</label>
+          {propValues.length > 0 ? (
+            <select
+              value={productProperties[propName] ?? ''} // Use nullish coalescing operator to handle null/undefined
+              onChange={ev => setProductProp(propName, ev.target.value)}
+            >
+              <option value="">Select {propName}</option>
+              {propValues.map(v => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              value={productProperties[propName] ?? ''} // Use nullish coalescing operator to handle null/undefined
+              onChange={ev => setProductProp(propName, ev.target.value)}
+            />
+          )}
+        </div>
+      ))}
+
+      <label>Photos</label>
       <div className="mb-2 flex flex-wrap gap-1">
         <ReactSortable
           list={imageURLs}
           className="flex flex-wrap gap-1"
           setList={updateImagesOrder}>
-          {!!imageURLs?.length && imageURLs.map(link => (
-            <div key={link} className="h-24 bg-white p-4 shadow-sm rounded-sm border border-gray-200">
+          {imageURLs?.map(link => (
+            <div
+              key={link}
+              className="h-24 bg-white p-4 shadow-sm rounded-sm border border-gray-200"
+            >
               <img src={link} alt="" className="rounded-lg" />
             </div>
           ))}
@@ -260,32 +303,41 @@ export default function ProductForm({
           </div>
         )}
         <label className="w-24 h-24 cursor-pointer text-center flex flex-col items-center justify-center text-sm gap-1 text-primary rounded-sm bg-white shadow-sm border border-primary">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none" viewBox="0 0 24 24"
+            strokeWidth={1.5} stroke="currentColor"
+            className="w-6 h-6"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5
+                 A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0
+                 0l4.5 4.5M12 3v13.5" 
+            />
           </svg>
-          <div>
-            Add image
-          </div>
+          <div>Add image</div>
           <input type="file" onChange={handleImage} className="hidden" />
         </label>
       </div>
+
       <label>Description</label>
       <textarea
         placeholder="description"
         value={description}
         onChange={ev => setDescription(ev.target.value)}
       />
+
       <label>Price (in Euro)</label>
       <input
-        type="number" placeholder="price"
+        type="number"
+        placeholder="price"
         value={price}
         onChange={ev => setPrice(ev.target.value)}
       />
-      <button
-        type="submit"
-        className="btn-primary">
-        Save
-      </button>
+
+      <button type="submit" className="btn-primary">Save</button>
       <button
         type="button"
         className="btn-default ml-4"
