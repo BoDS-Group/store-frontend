@@ -1,4 +1,4 @@
-# Store Frontend
+# Store Frontend - Second Chance
 
 This repository contains the frontend code for the Store application. The application is built using Next.js and React, and it includes various components and pages to manage products, categories, orders, and settings.
 
