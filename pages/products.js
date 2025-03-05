@@ -4,6 +4,7 @@ import {useEffect, useState} from "react";
 import axiosInstance from "@/components/AxiosInstance";
 import { fetchProducts, fetchCategories } from "@/utils/api";
 import { useUser } from "@/components/UserContext";
+import DownloadBarcodeButton from '@/components/DownloadBarcodeButton';
 
 export default function Products() {
   const [products,setProducts] = useState([]);
@@ -62,6 +63,7 @@ export default function Products() {
                   </svg>
                   {/* Delete */}
                 </Link>)}
+                <DownloadBarcodeButton productId={product.id} />
               </td>
             </tr>
           ))}

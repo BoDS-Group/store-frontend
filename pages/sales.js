@@ -43,6 +43,7 @@ export default function SalesPage() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [orderId, setOrderId] = useState(null); 
 
   const handleFetchProduct = async () => {
     if (!barcode.trim()) {
@@ -87,7 +88,7 @@ export default function SalesPage() {
   const incrementQuantity = (barcodeValue) => {
     setScannedProducts(
       scannedProducts.map((item) =>
-        item.barcode === barcodeValue && item.quantity < item.stock
+        item.barcode === barcodeValue && item.quantity < item.qty
           ? { ...item, quantity: item.quantity + 1 }
           : item
       )
@@ -123,14 +124,34 @@ export default function SalesPage() {
         acc[product.id] = product.quantity;
         return acc;
       }, {});
-      await axiosInstance.post('/store/employee/submit-order', { cart_items: body });
+      console.log(body);
+      const response = await axiosInstance.post('/store/employee/submit-order', { cart_items: body });
       setScannedProducts([]);
       setSuccessMsg('Order submitted successfully!');
+      setOrderId(response.data.orderId);
     } catch (err) {
       console.error(err);
       setErrorMsg('Could not submit order.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadInvoice = async () => {
+    try {
+      const response = await axiosInstance.get(`/store/employee/invoice/${orderId}`, {
+        responseType: 'blob' 
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const pdfUrl = URL.createObjectURL(blob);
+      const newWindow = window.open(pdfUrl, "_blank");
+      if (newWindow) {
+        newWindow.print();
+      } else {
+        console.error("Failed to open the invoice in a new tab.");
+      }
+    } catch (error) {
+      console.error("Error printing invoice:", error);
     }
   };
 
@@ -177,8 +198,8 @@ export default function SalesPage() {
                 <tr key={item.barcode}>
                   <td>{item.barcode}</td>
                   <td>{item.title ?? '[No title]'}</td>
-                  <td>{item.price ?? '[No price]'}</td>
-                  <td>{item.stock ?? '[No stock]'}</td>
+                  <td>{'€'+item.price ?? '[No price]'}</td>
+                  <td>{item.qty ?? '[No stock]'}</td>
                   <td>{item.quantity}</td>
                   <td style={{ textAlign: 'center' }}>
                     <button
@@ -203,10 +224,11 @@ export default function SalesPage() {
                 </tr>
               ))}
               <tr>
-                <td colSpan="3" style={{ textAlign: 'right', fontWeight: 'bold' }}>Total Price:</td>
+                <td colSpan="2" style={{ textAlign: 'right', fontWeight: 'bold' }}>Total Price:</td>
                 <td style={{ textAlign: 'center', fontWeight: 'bold' }}>
-                  {scannedProducts.reduce((total, item) => total + (item.price ?? 0) * item.quantity, 0).toFixed(2)}
+                  {'€'+scannedProducts.reduce((total, item) => total + (item.price ?? 0) * item.quantity, 0).toFixed(2)}
                 </td>
+                <td></td>
                 <td></td>
                 <td></td>
               </tr>
@@ -218,10 +240,18 @@ export default function SalesPage() {
           <button
             onClick={handleSubmitOrder}
             disabled={loading || !scannedProducts.length}
-            className="bg-highlight text-primary hover:bg-primary hover:text-white px-4 py-2 rounded disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-gray-500"
+            className="bg-highlight text-primary hover:bg-primary hover:text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Submitting...' : 'Submit Order'}
           </button>
+          {successMsg && orderId && (
+            <button
+              onClick={handleDownloadInvoice}
+              className="bg-primary text-white right-2 px-4 py-2 rounded mt-4"
+            >
+              Download Invoice
+            </button>
+          )}
         </div>
       </div>
     </Layout>
